@@ -1,0 +1,42 @@
+name: Rudersdorf prüfen
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  lernen:
+    name: Lernmodell · Python ${{ matrix.python }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ['3.10', '3.12', '3.14']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Alle Lernaufgaben der Referenz
+        run: python pruefen.py --alle --loesung
+      - name: Spielregeln und komplette Partien
+        run: python -m unittest tests.test_spielkern -v
+  fenster:
+    name: Echte Fenster und Bedienung
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tkinter und virtuelles Display
+        run: sudo apt-get update && sudo apt-get install -y python3-tk xvfb
+      - name: Gesamte Referenz und ungelöste Werkstatt
+        env:
+          RUDERSDORF_LOESUNG: '1'
+        run: xvfb-run -a /usr/bin/python3 -m unittest discover -v
+  stil:
+    name: Lesbarer Python-Code
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install ruff==0.16.6
+      - run: ruff check .
+      - run: ruff format --check .
