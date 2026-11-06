@@ -14,7 +14,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
-      - name: Alle Lernaufgaben der Referenz
+      - name: Alle Lernaufgaben der Referenz (Teil 1 und 2)
         run: python pruefen.py --alle --loesung
       - name: Spielregeln und komplette Partien
         run: python -m unittest tests.test_spielkern -v

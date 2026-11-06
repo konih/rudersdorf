@@ -1,92 +1,99 @@
 # Rudersdorf wird dein Spiel
 
-Die neun Missionen aus `AUFGABEN.md` haben klare Regeln und fertige Tests.
+Die Missionen aus `AUFGABEN.md` und `AUFGABEN-TEIL2.md` haben klare Regeln und fertige Tests.
 Hier entscheidest **du** über das Design. Für diese freien Erweiterungen gibt es
-absichtlich noch keine fertige Lösung und keine fertigen Bewertungstests.
+absichtlich keine fertige Lösung und keine fertigen Bewertungstests.
 Schreibe zuerst zwei oder drei eigene Beispiele auf: Was soll passieren — und was nicht?
 
-## 1 · Der Wachtmeister: andere Ziele auswählen ★
+> Einige frühere Knobelideen sind inzwischen echte Missionen geworden: der Wachtmeister (13),
+> der Schildork (11), der Troll (12), die Gebäude (14) und das Speichern (16–17).
+> Schau dir an, wie sie gelöst wurden, und baue darauf auf.
 
-Der erste Turm beschießt den Gegner mit dem größten Fortschritt. Was wäre, wenn
-ein Wachtmeister auf den Gegner mit den wenigsten Lebenspunkten zielen könnte?
+## 1 · Der Giftturm ★★
 
-- Füge eine neue Turm-Unterklasse hinzu, die nur `waehle_ziel` überschreibt.
-- Behalte die Regeln für Reichweite und besiegte Gegner bei.
-- Entscheide, wer bei gleichen Lebenspunkten gewinnt.
+Ein Giftpfeil wirkt nicht sofort, sondern **über Zeit**: zum Beispiel 4 Schaden pro
+Sekunde, 3 Sekunden lang.
 
-**Eigene Tests:** Ein schwacher Gegner außerhalb der Reichweite darf nicht gewinnen.
-Eine leere Liste liefert weiterhin `None`. Ein Turmwechsel darf die Liste nicht sortieren.
-**Denkfrage:** Wann ist diese Strategie schlechter als die ursprüngliche?
+- Der Turm setzt beim Treffer am Ziel eine Giftzeit, ähnlich wie `frost_rest`.
+- Den Schaden verursacht der Gegner selbst in `bewege`, mit `super().bewege(...)` wie beim Troll.
+- Entscheide: Verlängert ein zweiter Treffer das Gift oder wird es stärker?
+- Ergänze Bauplan, Kurzname und Zeichnung (siehe `ERWEITERN.md`).
 
-## 2 · Ein Ork mit Schild ★★
+**Eigene Tests:** Gift läuft ab; ein besiegter Gegner nimmt keinen weiteren Schaden;
+Gift und Troll-Heilung zusammen: Wer gewinnt? Schildork-Rüstung gegen Gift?
+**Denkfrage:** Warum ist Gift gegen Schildorks so stark?
 
-Ein Schildork kann kleine Treffer abwehren. Führe eine Unterklasse von `Gegner` ein,
-die beispielsweise 3 Punkte Schaden pro Treffer abfängt.
+## 2 · Rudersdorfs Bestenliste ★★
 
-- Wird aus 2 Schaden dann 0 oder mindestens 1? Du entscheidest und dokumentierst es.
-- Große Treffer sollen weiterhin wirksam sein.
-- Negative Treffer dürfen auch einen Schildork nicht heilen.
-- Ergänze die Erzeugung im Spielkern: Bisher baut sie immer die Klasse `Gegner`.
+Nach Sieg oder Niederlage soll das Spiel eine Bestenliste zeigen: die fünf besten
+Partien nach besiegten Gegnern.
 
-**Eigene Tests:** Schaden kleiner, gleich und größer als die Rüstung;
-mehrere Treffer hintereinander; Übertreffer auf fast besiegte Orks.
-**Denkfrage:** Welche Turmart ist gegen diese Orks besonders geeignet?
+- Eine Partie ist ein Dictionary, etwa `{"name": "Luki", "besiegt": 74, "welle": 10}`.
+- Die Bestenliste ist eine **Liste** solcher Dictionaries. Neue Einträge kommen hinzu;
+  danach wird sortiert und auf fünf gekürzt.
+- Tipp: `sorted(liste, key=lambda partie: partie["besiegt"], reverse=True)` und `liste[:5]`.
+- Speichere die Liste als JSON wie in Mission 16.
 
-## 3 · Die Dorfbewohner bekommen Berufe ★★
+**Eigene Tests:** Leere Liste; genau fünf; ein sechster, schlechterer Eintrag fällt raus;
+Gleichstand. **Denkfrage:** Wer gewinnt bei Gleichstand — die ältere oder die neuere Partie?
+
+## 3 · Die Chronik wird schlau ★
+
+Erweitere die `Chronik` aus Mission 15:
+
+- `haeufigster()` gibt den Namen zurück, der am öftesten vorkommt (bei Gleichstand der zuerst gesehene).
+- `statistik()` liefert ein Dictionary Name → Anzahl. Kommt dir das aus Mission 10 bekannt vor?
+- Zeige nach dem Sieg „Am meisten besiegt: Ork (31×)“.
+
+**Eigene Tests:** Leere Chronik; ein einziger Eintrag; Gleichstand.
+
+## 4 · Türme verkaufen ★★
+
+Ein Turm am falschen Platz? Verkaufe ihn für die Hälfte des Baupreises.
+
+- Entscheide, ob Upgrades auch zur Hälfte erstattet werden.
+- Der Spielkern speichert Türme in `self.tuerme`; der Bauplatz wird wieder frei.
+- Verkaufen nur in Baupausen, oder auch während einer Welle?
+- Achtung bei ungeraden Preisen: 45 Gold / 2 = 22,5. Rundest du ab oder auf?
+
+**Eigene Tests:** Verkaufen und neu bauen auf demselben Platz; Holzpreis beim Wachtmeister;
+verkaufen eines nicht vorhandenen Turms ändert nichts.
+
+## 5 · Die Dorfbewohner bekommen Berufe ★★
 
 Bisher sind Bewohner eine Zahl. Mache daraus Figuren mit Namen und Berufen:
 `Dorfbewohner`, `Holzfaeller`, `Steinmetzin` und `Baeuerin`.
 
 - Beginne mit einem Konstruktor für Name und Beruf.
-- Lass einen Bewohner pro Runde einen Rohstoffbeitrag als Dictionary liefern.
-- Sammle die Beiträge einer Liste von Bewohnern im Dorf.
+- Lass einen Bewohner pro Runde einen Rohstoffbeitrag als Dictionary liefern —
+  genau wie `Gebaeude.liefere` aus Mission 14.
 - Die Oberfläche soll weiterhin ohne Kenntnis einzelner Berufe zeichnen können.
 
 **Eigene Tests:** Zwei Bewohner teilen keine veränderlichen Vorräte.
-Ein leeres Dorf liefert nichts. Zwei Holzfäller liefern doppelt so viel wie einer.
-**Denkfrage:** Sind verschiedene Unterklassen wirklich nötig, oder reicht manchmal
-auch ein Beruf im Dictionary? Probiere beide Varianten auf Papier.
+Zwei Holzfäller liefern doppelt so viel wie einer.
+**Denkfrage:** Sind verschiedene Unterklassen wirklich nötig, oder reicht ein Beruf im Dictionary?
 
-## 4 · Marktplatz und Sägewerk ★★
+## 6 · Der Orkkönig persönlich ★★★
 
-Gib dem Dorf Gebäude mit unterschiedlichen Fähigkeiten. Ein Sägewerk erzeugt Holz,
-ein Steinbruch Stein, ein Marktplatz Gold.
+Eine elfte Welle mit nur einem Gegner: dem Orkkönig.
 
-- Plane eine gemeinsame Klasse `Gebaeude` mit Baukosten und Stufe.
-- Sammle Gebäude in einer Liste.
-- Ein neues Gebäude soll über denselben Bezahlmechanismus wie Häuser entstehen.
-- Zeichne zunächst nur ein kleines Symbol oder Schild, dann ein richtiges Gebäude.
+- Er hat sehr viele Lebenspunkte und einen Schild **und** heilt sich.
+  Kannst du von Schildork **und** Troll erben? (Stichwort: Mehrfachvererbung, `super()` in beiden.)
+- Oder ruft er alle 5 Sekunden zwei Orks herbei? Dann muss der Spielkern neue Gegner
+  während der Welle aufnehmen können.
+- Wähle **eine** Idee und beschreibe sie genau, bevor du programmierst.
 
-**Eigene Tests:** Ohne Vorräte kein Gebäude; Kosten nur einmal abbuchen;
-Einkommen hängt von den tatsächlich vorhandenen Gebäuden ab.
-**Denkfrage:** Wie verhinderst du, dass ein mächtiges Gebäude das Spiel sofort zu leicht macht?
+**Eigene Tests:** Besiegter König ruft niemanden mehr; Heilung nicht über `max_leben`;
+die Welle endet erst, wenn auch die herbeigerufenen Orks weg sind.
 
-## 5 · Ein richtiger Belagerungsangriff ★★★
+## 7 · Ein richtiger Belagerungsangriff ★★★
 
 Ein Rammbock macht der Mauer besonders viel Schaden. Ein Schamane stärkt andere Orks.
-Oder ein Troll regeneriert zwischen Treffern Lebenspunkte.
 
-Wähle **eine** Idee und beschreibe sie genau. Füge nicht alle gleichzeitig hinzu.
+**Eigene Tests:** Ein Rammbock vor dem Dorf darf noch keinen Mauerschaden verursachen.
+Kein Bonus nach dem Ende einer Welle. Ein besiegter Schamane stärkt niemanden mehr.
 
-**Eigene Tests:** Ein besiegter Troll darf nicht wiederauferstehen. Heilung darf
-`max_leben` nicht überschreiten. Ein Rammbock vor dem Dorf darf noch keinen
-Mauerschaden verursachen. Kein Bonus nach dem Ende einer Welle.
-
-## 6 · Rudersdorf schläft nicht: Speichern ★★★
-
-Speichere zwischen Wellen einen Spielstand als JSON. Nutze die Python-Standardbibliothek.
-
-- Speichere einfache Werte: Vorräte, Häuser, Bewohner, Mauer, Welle, Turmart,
-  Bauplatz und Stufe. Speichere keine Tkinter-Objekte.
-- Prüfe geladene Daten, bevor du den laufenden Spielstand ersetzt.
-- Entscheide, wie du mit einer fehlenden oder kaputten Datei umgehst.
-- Speichere zunächst nur in Baupausen. Gegner mitten auf dem Weg kommen später.
-
-**Eigene Tests:** Speichern und Laden ergibt denselben Zustand; beschädigtes JSON
-beschädigt nicht die aktuelle Partie; unbekannte Turmart und doppelter Bauplatz
-werden verständlich gemeldet.
-
-## 7 · Dein eigener Kartenbaukasten ★★★
+## 8 · Dein eigener Kartenbaukasten ★★★
 
 Erweitere Rudersdorf um ein zweites Tal, eine Brücke oder eine andere Dorfposition.
 
@@ -94,17 +101,18 @@ Erweitere Rudersdorf um ein zweites Tal, eine Brücke oder eine andere Dorfposit
 - Ein Weg muss mindestens zwei unterschiedliche aufeinanderfolgende Punkte haben.
 - Der aktuelle Hintergrund wird separat gezeichnet: Passe ihn zur neuen Karte an.
 - Später könntest du mehrere Karten als Daten speichern und auswählbar machen.
+  Achtung: Ein Spielstand aus Mission 16 passt dann nur zu seiner Karte. Wie merkst du das?
 
 **Eigene Tests:** Eine Position am Anfang und Ende liegt auf dem Weg; ein Knick
 funktioniert; keine Division durch null bei ungültigen Wegpunkten.
 
 ## Deine Idee zählt
 
-Male dein nächstes Gebäude auf Papier. Schreibe darunter:
+Male dein nächstes Gebäude, deinen nächsten Gegner oder Turm auf Papier. Schreibe darunter:
 
 1. Was kann es?
 2. Welche Werte braucht es beim Erstellen?
-3. Welche Methode verändert diese Werte?
+3. Von welcher Klasse erbt es, und welche Methode überschreibt es?
 4. Was ist ein normaler Fall, was ein ungewöhnlicher Fall?
 5. Wie kannst du beides ohne Fenster testen?
 

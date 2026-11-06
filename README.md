@@ -33,6 +33,11 @@ Das Fenster ist 1180 × 760 Pixel groß; plane zusätzlich Platz für die Fenste
 > Ersetze dann `python` in **allen** Befehlen entsprechend.
 > Wenn mehrere Python-Versionen installiert sind, verwende für Spiel und Tests dieselbe.
 
+**Teil 2 ist da!** Wer die Missionen 1–9 gelöst hat, macht in
+[AUFGABEN-TEIL2.md](AUFGABEN-TEIL2.md) weiter: Schildorks, Trolle, ein vierter Turm,
+Gebäude, eine Chronik aus Listen und Speicherstände. Teil 2 arbeitet in **`modell2.py`**,
+das deine Lösungen aus `modell.py` importiert und erweitert. `modell.py` bleibt unverändert.
+
 **Wichtig:** Die Werkstatt ist absichtlich ungelöst. Du siehst das Dorf sofort,
 aber Aktionen können auf eine noch offene Aufgabe hinweisen. Erst nach den
 Grundaufgaben 1–6 läuft eine vollständige Partie. Die Referenz wird niemals
@@ -52,18 +57,23 @@ unbemerkt geladen und deine Aufgaben werden niemals automatisch übersprungen.
 
 ## Spielen
 
-- **1 / 2 / 3:** Pfeil-, Frost- oder Kanonenturm auswählen.
+- **1 / 2 / 3 / 4:** Pfeil-, Frost-, Kanonenturm oder Wachtmeister (Teil 2) auswählen.
 - **Klick auf einen runden Bauplatz:** Turm kaufen und bauen. Der Preis wird oben rechts angezeigt.
 - **N oder „Nächste Welle“:** Den nächsten Angriff starten. Wellen starten nie von selbst.
 - **Leertaste:** Angriff pausieren/fortsetzen; zwischen Wellen die nächste starten.
-- **Klick auf einen gebauten Turm:** Reichweite sehen und ihn für ein Upgrade auswählen.
+- **Klick auf einen gebauten Turm:** Reichweite und Werte sehen, ihn für ein Upgrade auswählen.
+- **F:** Spieltempo zwischen 1× und 2× umschalten.
+- **S / L:** In einer Baupause speichern bzw. laden (Teil 2, Aufgaben 16–17).
 - **Dorf-Schaltflächen:** Zwischen Wellen Mauer bauen, reparieren oder Häuser ergänzen.
-  Diese Aktionen gehören zu den Zusatzaufgaben 7–9.
+  Diese Aktionen gehören zu den Zusatzaufgaben 7–9; Sägewerk, Steinbruch und Markt zu Aufgabe 14.
 - **R:** Neue Partie beginnen, auch nach Sieg oder Niederlage. Verwirft den aktuellen Spielstand.
 - **Esc:** Einen Aufgabenhinweis schließen. Nach Codeänderungen das Fenster schließen und neu starten.
 
-**Ziel:** Überstehe alle fünf Wellen mit mindestens einem Dorf-Lebenspunkt.
-Ein durchgebrochener Ork oder Wolfsreiter verursacht 1 Schaden, ein Oger 3.
+**Ziel:** Überstehe alle zehn Wellen mit mindestens einem Dorf-Lebenspunkt.
+Welle 1–5 bilden Teil 1; ab Welle 6 kommen Schildorks und Trolle, und die Gegner werden
+mit jeder Welle zäher. Für Welle 6–10 brauchst du deshalb die Missionen aus Teil 2.
+Ein durchgebrochener Ork oder Wolfsreiter verursacht 1 Schaden, ein Schildork 2,
+ein Oger 3 und ein Troll 4 (`dorfschaden` in `welt.MONSTER`).
 Eine vorhandene Stadtmauer fängt Schaden zuerst ab.
 Besiegte Gegner geben Gold. Zwischen Wellen erhältst du Grundversorgung:
 35 Gold, 15 Holz und 10 Stein. Mit Zusatzaufgabe 8 kommt das Einkommen des Dorfes hinzu.
@@ -82,8 +92,18 @@ Nach der letzten Welle ist das Spiel gewonnen; danach gibt es kein weiteres Eink
 | 7 · Die Stadtmauer | Zusatz: Ausbau, Reparatur, Grenzen | `python pruefen.py 7` |
 | 8 · Neue Nachbarn | Zusatz: Häuser und Einkommen | `python pruefen.py 8` |
 | 9 · Die Turmschmiede | Zusatz: Upgrades und Vererbung | `python pruefen.py 9` |
+| **Teil 2** · [AUFGABEN-TEIL2.md](AUFGABEN-TEIL2.md) | in `modell2.py` | |
+| 10 · Der Späherbericht | Dictionary als Zähler | `python pruefen.py 10` |
+| 11 · Der Schildork | Überschreiben mit `super()` | `python pruefen.py 11` |
+| 12 · Der Troll | `super()` und Reihenfolge | `python pruefen.py 12` |
+| 13 · Der Wachtmeister | Neue Turmart, eigene Zielwahl | `python pruefen.py 13` |
+| 14 · Sägewerk, Steinbruch, Markt | Objekte in Listen, Kopien | `python pruefen.py 14` |
+| 15 · Die Chronik | Listen: anhängen, ausschneiden, zählen | `python pruefen.py 15` |
+| 16 · Der Dorfschreiber | Zusatz: Spielstand für JSON | `python pruefen.py 16` |
+| 17 · Die Siegelprüfung | Zusatz: Daten prüfen | `python pruefen.py 17` |
 
-`python pruefen.py --basis` prüft 1–6, `python pruefen.py --alle` prüft 1–9.
+`python pruefen.py --basis` prüft 1–6, `--teil1` prüft 1–9, `--teil2` prüft 10–17
+und `--alle` prüft alles.
 Ohne Argument beginnt der Teststarter bei Aufgabe 1. Fehlende Aufgaben und falsche
 Ergebnisse führen bewusst zu Exitcode 1; alles richtig ergibt Exitcode 0.
 Die Tests nennen Erwartung, tatsächliches Ergebnis und einen Hinweis.
@@ -108,20 +128,22 @@ erst nach einem eigenen Versuch.
 
 | Datei | Zweck |
 | --- | --- |
-| `modell.py` | **Deine Baustelle:** Grundaufgaben und Zusätze, ohne Lösungen |
+| `modell.py` | **Deine Baustelle Teil 1:** Aufgaben 1–9 |
+| `modell2.py` | **Deine Baustelle Teil 2:** Aufgaben 10–17, baut auf `modell.py` auf |
 | `AUFGABEN.md` | Ausführliche Missionen mit Verträgen, Beispielen und gestuften Hinweisen |
+| `AUFGABEN-TEIL2.md` | Die Missionen von Teil 2 |
 | `KNOBELAUFGABEN.md` | Freie Erweiterungen mit Ideen für eigene Tests |
-| `welt.py` | Karte, Bauplätze, Baupläne, Gegnerdaten und Wellen |
+| `welt.py` | Karte, Bauplätze, Baupläne, Gegnerdaten, Gebäude, Wellen und Wellenstärke |
 | `spielkern.py` | Vorbereitete Spielschleife, ohne Tkinter testbar |
 | `oberflaeche.py` | Vorbereitete Zeichnungen, Animationen und Bedienung |
 | `pruefen.py`, `tests/` | Lernfeedback und Techniktests |
-| `loesung/modell.py` | Vollständig gelöste Aufgaben 1–9 |
+| `loesung/modell.py`, `loesung/modell2.py` | Vollständig gelöste Aufgaben 1–9 und 10–17 |
 | `FUER-ELTERN.md` | Lernbegleitung und technische Prüfung |
 | `ERWEITERN.md` | Wegweiser für weitere Gebäude, Berufe und Spielideen |
 
 Alle Grafiken werden mit Tkinter gezeichnet. Keine externen Bilddateien nötig.
 Die Karte ist bewusst kompakt, der Schwierigkeitsgrad ein Einstieg, kein fertiges
-kommerzielles Strategiespiel. Es gibt noch keine Speicherstände oder Sounds.
+kommerzielles Strategiespiel. Speichern gibt es ab Aufgabe 16, Sounds noch nicht.
 Auf der Karte werden maximal acht Häuser und zwanzig Bewohner gezeichnet;
 die Zähler und die Wirtschaft wachsen darüber hinaus weiter.
 

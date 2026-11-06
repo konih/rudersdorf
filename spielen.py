@@ -25,7 +25,8 @@ def main():
             1,
             f"Das Fenster konnte nicht geöffnet werden: {fehler}\nStarte das Spiel auf einem Computer mit grafischer Oberfläche.\n",
         )
-    modell = importlib.import_module("loesung.modell" if args.loesung else "modell")
+    # Teil 2 baut auf modell.py auf und enthält zusätzlich alle neuen Klassen.
+    modell = importlib.import_module("loesung.modell2" if args.loesung else "modell2")
     Fenster(wurzel, modell, args.loesung)
     wurzel.mainloop()
 

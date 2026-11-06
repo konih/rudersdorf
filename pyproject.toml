@@ -9,3 +9,5 @@ select = ["E4", "E7", "E9", "F", "I", "B"]
 [tool.ruff.lint.per-file-ignores]
 # Für Lukis Abstandberechnung bereits vorbereitet.
 "modell.py" = ["F401"]
+# Teil 2: Werkzeuge und Weltdaten sind für Luki schon importiert.
+"modell2.py" = ["F401"]

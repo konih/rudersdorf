@@ -24,29 +24,31 @@ Für eine neue Kombination aus Name, Leben, Tempo und Gold reicht ein Eintrag in
 Die neue Art wird zunächst mit dem normalen Ork-Symbol gezeichnet und verursacht
 1 Dorfschaden. Besondere Darstellung ergänzt du in `Fenster.zeichne_gegner`.
 
-Für **besonderes Verhalten** wie Rüstung brauchst du zusätzlich eine Unterklasse
-und eine Zuordnung von Art zu Klasse in `Spiel.starte_welle`.
-Derzeit verwendet diese Methode absichtlich nur `modell.Gegner`.
-Die Sonderregel „Oger verursachen 3 Schaden“ steht in `Spiel.schritt` und könnte
-später ebenfalls in die Gegnerdaten oder eine Methode wandern.
+Für **besonderes Verhalten** wie Rüstung brauchst du zusätzlich eine Unterklasse.
+Der Schlüssel `"klasse"` in `welt.MONSTER` nennt sie; `Spiel.starte_welle` sucht sie
+im Modell (so entstehen Schildork und Troll aus Teil 2). Der Dorfschaden beim
+Durchbruch steht als `"dorfschaden"` ebenfalls in den Gegnerdaten.
+`welt.WELLEN_STAERKE` multipliziert die Lebenspunkte jeder Welle.
 
 ## Eine neue Turmart
 
 1. Ergänze die Klasse in deinem Modell, möglichst als Unterklasse von `Turm`.
 2. Ergänze einen Bauplan in `welt.BAUPLAENE` mit `name`, `klasse`, `kosten`, `farbe`, `kurz`.
 3. Ergänze ihre Zeichnung in `Fenster.zeichne_turm`.
-4. Plane zusätzlichen Platz im Seitenbereich. Die jetzige Anordnung ist für drei
-   Turmarten ausgelegt; eine vierte Schaltfläche würde den Dorfbereich überlagern.
-5. Ergänze bei Bedarf ein neues Tastenkürzel und Verhaltenstests.
+4. Die Seitenleiste zeigt Turmarten als 2×2-Raster (`Fenster.zeichne_seitenleiste`).
+   Für eine fünfte Art brauchst du eine dritte Reihe: Rücke den Dorfbereich nach unten.
+5. Ergänze bei Bedarf ein neues Tastenkürzel, einen `KURZNAMEN`-Eintrag und Verhaltenstests.
 
 Die Spielschleife kennt nur Zielauswahl, Treffer und Nachladezeit.
 Eine neue Trefferwirkung braucht deshalb normalerweise keine neue Schleife.
 
 ## Ein neues Gebäude
 
-`Dorf` hält derzeit Vorräte und einfache Zähler. `baue_haus` ist das kleine Beispiel
-für „bezahlen → Zustand ändern“. Für mehrere Gebäudetypen bietet sich später eine
-Gebäudeliste an. Jedes Gebäude könnte seine eigenen Kosten und sein Einkommen kennen.
+`Dorf` aus Teil 1 hält Vorräte und einfache Zähler. Das `Dorf` aus Teil 2 erbt davon
+und hat eine Gebäudeliste; jedes `Gebaeude` kennt seinen Ertrag. Ein neuer Gebäudetyp
+braucht einen Eintrag in `welt.GEBAEUDE`, zwei Plätze in `GEBAEUDEPLAETZE` und eine
+Zeichnung in `Fenster.gebaeude`. Die Seitenleiste ergänzt den Knopf automatisch,
+hat aber nur Platz für sechs Dorfknöpfe.
 
 Halte die Berechnung des Einkommens im Modell. Zeichnungen und Animationen dürfen
 keine Rohstoffe erzeugen: Sonst beeinflusst die Bildrate den Kontostand.
@@ -66,11 +68,11 @@ die Zielauswahl nicht von einer zufälligen Bildschirmentfernung abhängt.
 ## Grenzen des jetzigen Rahmens
 
 - Feste Fenstergröße 1180 × 760, keine Kamera oder Zoomfunktion.
-- Ein Weg, neun Bauplätze, fünf von Hand zusammengestellte Wellen.
+- Ein Weg, neun Bauplätze, zehn von Hand zusammengestellte Wellen.
 - Eine Mauer als gemeinsamer Schutzvorrat; keine einzeln platzierbaren Mauersegmente.
 - Dorfbewohner bewegen sich dekorativ. Sie haben noch keine Berufe oder eigene Simulation.
 - Bis zu acht Häuser und zwanzig Bewohner werden gezeichnet; die Wirtschaft zählt alle.
-- Keine Speicherung, kein Sound, kein Internet, keine Zusatzpakete.
+- Speichern nur in Baupausen und nur ein Spielstand; kein Sound, kein Internet, keine Zusatzpakete.
 - Die Uhr nutzt kleine Zeitschritte. Nach langem Fensterstillstand holt das Spiel
   nicht die gesamte verstrichene Zeit nach; das ist für ein Lernspiel angenehmer.
 

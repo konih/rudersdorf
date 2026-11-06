@@ -9,6 +9,12 @@ Zugriffsschutz und kein Geheimnis.
 
 Lieber eine Mission mit verstandenem grünem Test als alle Missionen abgeschrieben.
 Die sechs Grundaufgaben sind der Kern; 7–9 sind getestete Zusatzaufgaben.
+Teil 2 (`AUFGABEN-TEIL2.md`, Missionen 10–17) setzt gelöste Aufgaben 1–9 voraus und
+arbeitet in einer eigenen Datei `modell2.py`, die `modell.py` importiert. So bleibt
+Lukis Teil-1-Lösung unangetastet, auch wenn Teil 2 nachträglich in seine Kopie kommt:
+Dafür genügt es, die neuen und geänderten Rahmendateien zu übernehmen, nur `modell.py` nicht.
+Missionen 10–15 sind der Kern von Teil 2 (Dictionaries, `super()` in Methoden,
+Objekte in Listen, eine reine Listenmission); 16–17 (Speichern und Prüfen) sind anspruchsvoller.
 Die freien Ideen in `KNOBELAUFGABEN.md` sind offen und haben keine Musterlösung.
 Es gibt keinen Zeitplan, den Luki einhalten muss.
 
@@ -35,7 +41,7 @@ eine vollständige Partie setzt alle sechs Grundaufgaben voraus.
 
 ## Testkonzept
 
-46 Lerntests prüfen die neun Aufgaben mit denselben Eingaben und Erwartungen,
+46 Lerntests für Teil 1 und 47 für Teil 2 prüfen die Aufgaben mit denselben Eingaben und Erwartungen,
 unabhängig davon, ob Werkstatt oder Referenz geladen ist. Tests prüfen Verhalten,
 keine vorgeschriebene Schleifenform oder Quelltextfragmente. Alternative richtige
 Lösungen sollen ebenso bestehen.
@@ -45,7 +51,8 @@ vom noch unfertigen Konstruktor auf. Zielwahl und Beute nutzen die Schadensregel
 Ausbauten nutzen die Dorfkasse. Das steht in der Aufgabenbeschreibung.
 
 Zusätzliche Techniktests prüfen Wegberechnung, Pause, Käufe, Mauer, Frost,
-Endzustände, Grundspiel ohne Zusatzeinkommen sowie echte Tkinter-Klicks.
+Endzustände, Grundspiel ohne Zusatzeinkommen, Speichern/Laden samt kaputter Dateien,
+offene Teil-2-Aufgaben ohne Datenverlust sowie echte Tkinter-Klicks.
 Sie verwenden die Referenz für den Rahmen. Diese Tests bewerten also nicht Lukis
 unfertige Grundaufgaben. Unter Linux ohne Display werden die Fenstertests übersprungen.
 
@@ -99,6 +106,10 @@ Für Wartung: `python -m pip install ruff==0.16.6`, dann `ruff check .` und
 ## Ein Einstieg in die Spielstrategie
 
 Drei Pfeiltürme auf den Plätzen nahe den engen Wegkurven sind ein guter Anfang.
+In Teil 2 reicht das nicht mehr: Der Techniktest gewinnt alle zehn Wellen nur mit
+gemischten Türmen, Wachtmeistern, Upgrades und Gebäuden. Eine reine Teil-1-Strategie
+mit acht Türmen verliert in Welle 10. Die Wellenstärke steht in `welt.WELLEN_STAERKE`
+und darf gern angepasst werden, wenn es zu schwer oder zu leicht ist.
 Vor der nächsten Welle kannst du wählen: mehr Feuerkraft, ein Haus für späteres
 Einkommen oder eine Mauer als Reserve. Eine vollständige Gewinnstrategie mit
 Upgrades wird auch vom Techniktest simuliert; das Spiel ist also gewinnbar.

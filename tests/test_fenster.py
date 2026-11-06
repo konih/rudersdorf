@@ -27,14 +27,14 @@ class FensterTests(unittest.TestCase):
         fenster.zeichne()
 
     def test_bauen_welle_pause_und_neustart(self):
-        from loesung import modell
+        from loesung import modell2 as modell
         from oberflaeche import Fenster
 
         f = Fenster(self.wurzel, modell, True)
         self.wurzel.update()
         self.klick(f, 265, 270)
         self.assertEqual(len(f.spiel.tuerme), 1)
-        self.klick(f, 950, 420)  # Stadtmauer.
+        self.klick(f, 950, 290)  # Stadtmauer.
         self.assertEqual(f.spiel.dorf.mauer, 5)
         self.klick(f, 950, 700)  # Welle.
         self.assertEqual(f.spiel.phase, "welle")
@@ -51,7 +51,7 @@ class FensterTests(unittest.TestCase):
         self.assertIsNone(f.fehler)
 
     def test_werkstatt_zeigt_offene_aufgabe(self):
-        import modell
+        import modell2 as modell
         from oberflaeche import Fenster
 
         # Diese offene Aufgabe bleibt eine Test-Fixture, auch wenn Luki seine löst.
@@ -69,3 +69,37 @@ class FensterTests(unittest.TestCase):
         self.assertEqual(f.spiel.phase, "bauen")
         self.assertFalse(self.fehler)
         self.assertEqual(f.spiel.dorf.vorraete["gold"], 160)
+
+    def test_teil2_knoepfe_und_anzeigen(self):
+        from loesung import modell2 as modell
+        from oberflaeche import Fenster
+
+        f = Fenster(self.wurzel, modell, True)
+        self.wurzel.update()
+        self.klick(f, 1060, 190)  # Wachtmeister wählen.
+        self.assertEqual(f.auswahl, "wache")
+        self.klick(f, 265, 270)
+        self.assertEqual(type(f.spiel.tuerme[1]).__name__, "Wachtmeister")
+        self.klick(f, 1060, 350)  # Sägewerk.
+        self.assertEqual([g.art for g in f.spiel.dorf.gebaeude], ["saegewerk"])
+        self.assertIn("5× Ork", f.spaehertext())
+        self.klick(f, 265, 270)  # Turm markieren zeigt seine Werte.
+        self.assertEqual(f.markiert, 1)
+        f.schalte_tempo()
+        self.assertEqual(f.tempo, 2)
+        self.assertFalse(self.fehler)
+        self.assertIsNone(f.fehler)
+
+    def test_offene_teil2_anzeigen_stuerzen_nicht_ab(self):
+        import modell2 as modell
+        from oberflaeche import Fenster
+
+        werkstatt = SimpleNamespace(**vars(modell))
+        werkstatt.spaeherbericht = lambda welle: (_ for _ in ()).throw(
+            NotImplementedError("Aufgabe 10")
+        )
+        f = Fenster(self.wurzel, werkstatt)
+        self.wurzel.update()
+        f.zeichne()
+        self.assertIn("Aufgabe 10", f.spaehertext())
+        self.assertFalse(self.fehler)

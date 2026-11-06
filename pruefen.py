@@ -39,21 +39,36 @@ def main():
         "aufgabe",
         nargs="?",
         type=int,
-        choices=range(1, 10),
-        help="Aufgabennummer 1 bis 9 (Standard: 1)",
+        choices=range(1, 18),
+        metavar="AUFGABE",
+        help="Aufgabennummer 1 bis 17 (Standard: 1)",
     )
-    parser.add_argument("--alle", action="store_true", help="alle Grund- und Zusatzaufgaben prüfen")
+    parser.add_argument("--alle", action="store_true", help="alle Aufgaben 1 bis 17 prüfen")
     parser.add_argument("--basis", action="store_true", help="Grundaufgaben 1 bis 6 prüfen")
+    parser.add_argument("--teil1", action="store_true", help="Teil 1: Aufgaben 1 bis 9 prüfen")
+    parser.add_argument("--teil2", action="store_true", help="Teil 2: Aufgaben 10 bis 17 prüfen")
     parser.add_argument("--loesung", action="store_true", help="ausdrücklich die Referenz prüfen")
     args = parser.parse_args()
-    if sum([args.aufgabe is not None, args.alle, args.basis]) > 1:
-        parser.error("Wähle eine Aufgabennummer ODER --alle ODER --basis.")
+    auswahl = [args.aufgabe is not None, args.alle, args.basis, args.teil1, args.teil2]
+    if sum(auswahl) > 1:
+        parser.error("Wähle eine Aufgabennummer ODER --alle, --basis, --teil1 oder --teil2.")
     os.environ["RUDERSDORF_LOESUNG"] = "1" if args.loesung else "0"
-    from tests import test_aufgaben
+    from tests import test_aufgaben, test_aufgaben2
 
-    nummern = range(1, 10) if args.alle else range(1, 7) if args.basis else [args.aufgabe or 1]
+    if args.alle:
+        nummern = range(1, 18)
+    elif args.basis:
+        nummern = range(1, 7)
+    elif args.teil1:
+        nummern = range(1, 10)
+    elif args.teil2:
+        nummern = range(10, 18)
+    else:
+        nummern = [args.aufgabe or 1]
     suite = unittest.TestSuite(
-        unittest.defaultTestLoader.loadTestsFromTestCase(getattr(test_aufgaben, f"Aufgabe{n:02}"))
+        unittest.defaultTestLoader.loadTestsFromTestCase(
+            getattr(test_aufgaben if n < 10 else test_aufgaben2, f"Aufgabe{n:02}")
+        )
         for n in nummern
     )
     print("RUDERSDORF · " + ("Referenzlösung" if args.loesung else "Deine Werkstatt"))

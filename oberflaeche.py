@@ -1,17 +1,32 @@
 """Vorbereitete Tkinter-Zeichenwerkstatt. Zum Lösen der Aufgaben nicht nötig."""
 
 import math
+import os
 import random
 import time
 import tkinter as tk
 from tkinter import font as tkfont
 
 from spielkern import Spiel
-from welt import BAUPLAENE, BAUPLAETZE, WEG, WELLEN
+from welt import BAUPLAENE, BAUPLAETZE, GEBAEUDE, MAX_GLEICHE_GEBAEUDE, MONSTER, WEG, WELLEN
 
 HINTERGRUND = "#101d24"
 TEXT = "#eee8cf"
 GOLD = "#e8bc67"
+SPIELSTAND = os.path.join(os.path.dirname(os.path.abspath(__file__)), "spielstand.json")
+KURZNAMEN = {"pfeil": "Pfeil", "frost": "Frost", "kanone": "Kanone", "wache": "Wache"}
+ROHSTOFFKUERZEL = {"gold": "G", "holz": "H", "stein": "S"}
+# Wo Gebäude im Dorf erscheinen: zwei Plätze pro Art.
+GEBAEUDEPLAETZE = {
+    "saegewerk": [(612, 668), (676, 684)],
+    "steinbruch": [(345, 650), (395, 668)],
+    "markt": [(745, 640), (850, 640)],
+}
+
+
+def preis(kosten):
+    """{"gold": 55, "holz": 20} wird zu "55 G · 20 H"."""
+    return "  ·  ".join(f"{menge} {ROHSTOFFKUERZEL.get(r, r)}" for r, menge in kosten.items())
 
 
 class Fenster:
@@ -25,6 +40,7 @@ class Fenster:
         self.maus = (-100, -100)
         self.fehler = None
         self.zeit = 0
+        self.tempo = 1
         self.letztes_bild = time.monotonic()
         self.knopfflaechen = []
         self.knopfschriften = {
@@ -39,6 +55,10 @@ class Fenster:
         wurzel.bind("1", lambda e: self.waehle("pfeil"))
         wurzel.bind("2", lambda e: self.waehle("frost"))
         wurzel.bind("3", lambda e: self.waehle("kanone"))
+        wurzel.bind("4", lambda e: self.waehle("wache"))
+        wurzel.bind("f", lambda e: self.schalte_tempo())
+        wurzel.bind("s", lambda e: self.sicher(lambda: self.spiel.speichere(SPIELSTAND)))
+        wurzel.bind("l", lambda e: self.sicher(lambda: self.spiel.lade(SPIELSTAND)))
         wurzel.bind("<space>", lambda e: self.sicher(self.weiter))
         wurzel.bind("n", lambda e: self.sicher(self.spiel.starte_welle))
         wurzel.bind("r", lambda e: self.neustart())
@@ -210,11 +230,58 @@ class Fenster:
                 for x in range(a, b, 14):
                     self.rechteck(x, 402, x + 8, 413, fill=farbe, outline="#48574f")
             self.text(770, 441, f"Stadtmauer  {dorf.mauer}/{dorf.max_mauer}", 9)
+        for art, plaetze in GEBAEUDEPLAETZE.items():
+            for x, y in plaetze[: self.anzahl_gebaeude(art)]:
+                self.gebaeude(x, y, art)
         # Dorfwimpel.
         self.linie(843, 267, 843, 239, fill="#c7b28a", width=2)
         self.polygon(
             844, 239, 864 + math.sin(self.zeit * 3) * 3, 244, 844, 252, fill="#dfb55c", outline=""
         )
+
+    def anzahl_gebaeude(self, art):
+        return sum(1 for g in getattr(self.spiel.dorf, "gebaeude", []) if g.art == art)
+
+    def gebaeude(self, x, y, art):
+        self.oval(x - 30, y + 12, x + 30, y + 22, fill="#2b4234", outline="")
+        if art == "saegewerk":
+            self.rechteck(x - 26, y - 8, x + 22, y + 16, fill="#9a7550", outline="#4b3b2b", width=2)
+            self.polygon(x - 30, y - 8, x - 2, y - 24, x + 26, y - 8, fill="#6e5236", outline="")
+            for dy in (0, 7):
+                self.linie(x + 22, y + dy, x + 34, y + dy, fill="#c8a46e", width=4)
+            self.oval(x - 20, y - 2, x - 4, y + 14, fill="#b7bcbd", outline="#565e5f", width=2)
+        elif art == "steinbruch":
+            self.polygon(
+                x - 28,
+                y + 16,
+                x - 14,
+                y - 16,
+                x + 4,
+                y - 4,
+                x + 26,
+                y - 18,
+                x + 30,
+                y + 16,
+                fill="#8d9293",
+                outline="#4f5759",
+                width=2,
+            )
+            for dx, dy in ((-10, 4), (8, 8), (16, -4)):
+                self.rechteck(x + dx, y + dy, x + dx + 9, y + dy + 6, fill="#c3c7c4", outline="")
+        else:
+            self.rechteck(x - 24, y - 4, x + 24, y + 16, fill="#a8865a", outline="#4b3b2b", width=2)
+            for i, farbe in enumerate(("#c4513f", "#e8d6a4", "#c4513f", "#e8d6a4")):
+                self.polygon(
+                    x - 28 + i * 14,
+                    y - 4,
+                    x - 21 + i * 14,
+                    y - 18,
+                    x - 14 + i * 14,
+                    y - 4,
+                    fill=farbe,
+                    outline="",
+                )
+            self.oval(x - 8, y + 2, x + 2, y + 12, fill=GOLD, outline="")
 
     def zeichne_turm(self, x, y, art, stufe):
         farbe = BAUPLAENE[art]["farbe"]
@@ -238,6 +305,11 @@ class Fenster:
                 outline="#d3ffff",
                 width=2,
             )
+        elif art == "wache":
+            self.linie(x + 12, y - 12, x + 12, y - 44, fill="#d9cfb0", width=2)
+            self.polygon(x + 13, y - 44, x + 31, y - 38, x + 13, y - 31, fill=farbe, outline="")
+            self.oval(x - 11, y - 33, x + 7, y - 15, fill="#b7bcc4", outline="#4e5560", width=2)
+            self.linie(x - 2, y - 33, x - 2, y - 40, fill=farbe, width=3)
         elif art == "kanone":
             self.linie(x, y - 10, x + 20, y - 29, fill="#303b3c", width=12)
             self.oval(x + 15, y - 34, x + 25, y - 24, fill="#141f26", outline="#9da49b", width=2)
@@ -249,10 +321,10 @@ class Fenster:
 
     def zeichne_gegner(self, gegner):
         x, y = gegner.x, gegner.y
-        gross = gegner.art == "oger"
-        r = 14 if gross else 9
+        art = getattr(gegner, "art", "ork")
+        r = {"oger": 14, "troll": 17, "schildork": 10}.get(art, 9)
         self.oval(x - r, y + 7, x + r + 4, y + 16, fill="#384537", outline="")
-        farbe = "#9ab267" if gross else "#7f9e4e"
+        farbe = {"oger": "#9ab267", "troll": "#7f9a96", "schildork": "#6d8a45"}.get(art, "#7f9e4e")
         if gegner.frost_rest > 0:
             self.oval(x - r - 5, y - r - 5, x + r + 5, y + r + 5, outline="#86dce0", width=2)
         if gegner.art == "wolf":
@@ -265,6 +337,17 @@ class Fenster:
         self.oval(x - 5, y - 5, x - 2, y - 2, fill="#ece3ad", outline="")
         self.oval(x + 3, y - 5, x + 6, y - 2, fill="#ece3ad", outline="")
         self.linie(x + r + 5, y - 4, x + r + 5, y + 13, fill="#b4a886", width=2)
+        if art == "schildork":
+            self.oval(
+                x - r - 9, y - 6, x - r + 3, y + 12, fill="#8b939c", outline="#d8dde0", width=2
+            )
+            self.oval(x - r - 5, y + 1, x - r - 1, y + 5, fill="#d8dde0", outline="")
+        elif art == "troll":
+            self.linie(x - 6, y - r + 2, x - 3, y - r - 4, fill="#4d625f", width=3)
+            self.linie(x + 6, y - r + 2, x + 3, y - r - 4, fill="#4d625f", width=3)
+            if gegner.frost_rest <= 0 and gegner.leben < gegner.max_leben:
+                funkeln = math.sin(self.zeit * 6 + x) * 4
+                self.text(x + r - 2, y - r - 22 + funkeln, "+", 11, "#a8e28a", True)
         self.rechteck(x - 17, y - r - 10, x + 17, y - r - 6, fill="#263b30", outline="")
         self.rechteck(
             x - 17,
@@ -327,6 +410,10 @@ class Fenster:
             self.linie(x, y - 20, a, b, fill=BAUPLAENE[art]["farbe"], width=3)
             if art == "kanone":
                 self.oval(a - 22, b - 22, a + 22, b + 22, outline="#f3ae72", width=3)
+        for x, y, inhalt, rest in s.anzeigen:
+            self.text(x - 10, y, inhalt, 12, GOLD if rest > 0.3 else "#a08a55", True)
+        if self.markiert in s.tuerme:
+            self.turminfo(s.tuerme[self.markiert])
         # Kopfbereich verdeckt Zeichnungen, die außerhalb der Karte liegen.
         self.rechteck(0, 0, 1180, 85, fill=HINTERGRUND, outline="")
         self.text(25, 14, "RUDERSDORF", 25, GOLD, True)
@@ -341,81 +428,15 @@ class Fenster:
             self.text(x, 17, str(d.vorraete[schluessel]), 20, farbe, True)
             self.text(x, 50, name, 9, "#a6b6ab")
         self.rechteck(920, 85, 1180, 760, fill="#172a28", outline="")
-        self.text(940, 103, "DEIN VERTEIDIGUNGSPLAN", 10, "#b9c5ad", True)
-        for i, (art, plan) in enumerate(BAUPLAENE.items()):
-            self.knopf(
-                940,
-                134 + i * 70,
-                220,
-                60,
-                f"{i + 1}  {plan['name']}  ·  {plan['kosten']['gold']} G",
-                lambda a=art: self.waehle(a),
-                gewaehlt=self.auswahl == art,
-                untertitel=plan["kurz"],
-            )
-        self.text(940, 352, "Turm wählen → Bauplatz anklicken", 9, "#abbba6")
-        self.text(940, 382, "RUDERSDORF AUSBAUEN", 10, "#b9c5ad", True)
-        bauphase = s.phase == "bauen"
-        self.knopf(
-            940,
-            408,
-            220,
-            44,
-            "Mauer +5  ·  20 H / 30 S",
-            lambda: s.dorf_aktion("baue_mauer"),
-            bauphase,
-        )
-        self.knopf(
-            940,
-            460,
-            220,
-            44,
-            "Reparatur +5  ·  10 S",
-            lambda: s.dorf_aktion("repariere_mauer"),
-            bauphase,
-        )
-        self.knopf(
-            940, 512, 220, 44, "Haus · 30 G / 25 H", lambda: s.dorf_aktion("baue_haus"), bauphase
-        )
-        turm = s.tuerme.get(self.markiert)
-        titel = (
-            f"Turm ↑  ·  {35 * turm.stufe} G"
-            if turm and turm.stufe < 3
-            else "Für Upgrade Turm wählen"
-        )
-        if turm and turm.stufe == 3:
-            titel = "Höchste Stufe erreicht"
-        self.knopf(
-            940,
-            564,
-            220,
-            44,
-            titel,
-            lambda: s.verbessere(self.markiert),
-            bauphase and turm is not None and turm.stufe < 3,
-        )
-        self.text(940, 625, f"WELLE {s.welle} / {len(WELLEN)}", 12, GOLD, True)
-        self.text(
-            940,
-            650,
-            f"{len(s.gegner) + len(s.warteschlange)} Gegner übrig  ·  {d.haeuser} Häuser",
-            10,
-        )
-        titel = (
-            "Nächste Welle  [N]"
-            if bauphase
-            else ("Weiter  [Leertaste]" if s.pause else "Pause  [Leertaste]")
-        )
-        if s.phase in ("sieg", "verloren"):
-            titel = "Noch einmal spielen  [R]"
-        self.knopf(940, 689, 220, 46, titel, self.weiter)
+        self.zeichne_seitenleiste(s, d)
         self.rechteck(0, 705, 920, 760, fill=HINTERGRUND, outline="")
         self.text(23, 715, s.hinweis, 11, width=875)
         self.text(
             23,
             740,
             ("REFERENZLÖSUNG" if self.referenz else "LUKIS WERKSTATT")
-            + "  ·  1–3 Turm wählen  ·  Leertaste Pause  ·  R Neustart",
+            + "  ·  1–4 Turm  ·  Leertaste Pause  ·  F Tempo"
+            + f" {self.tempo}×  ·  S Speichern  ·  L Laden  ·  R Neustart",
             8,
             "#91a498",
         )
@@ -431,8 +452,15 @@ class Fenster:
                 GOLD,
                 True,
             )
-            self.text(235, 352, s.hinweis, 12, width=440)
-            self.text(235, 418, "Drücke R für eine neue Verteidigung.", 12)
+            self.text(235, 348, s.hinweis, 12, width=440)
+            self.text(
+                235,
+                396,
+                f"Welle {s.welle}  ·  {s.besiegt} Gegner besiegt  ·  {s.beute_gesamt} Gold Beute",
+                11,
+                "#c4c7ae",
+            )
+            self.text(235, 425, "Drücke R für eine neue Verteidigung.", 12)
         elif s.pause:
             self.rechteck(310, 305, 640, 385, fill="#172b28", outline=GOLD, width=2)
             self.text(370, 325, "VERSCHNAUFPAUSE", 18, GOLD, True)
@@ -450,6 +478,129 @@ class Fenster:
             self.text(
                 170, 451, "Esc: Hinweis schließen    ·    R: Spiel zurücksetzen", 10, "#bbccae"
             )
+
+    def zeichne_seitenleiste(self, s, d):
+        self.text(940, 96, "DEIN VERTEIDIGUNGSPLAN", 10, "#b9c5ad", True)
+        for i, (art, plan) in enumerate(BAUPLAENE.items()):
+            self.knopf(
+                940 + (i % 2) * 113,
+                116 + (i // 2) * 56,
+                107,
+                50,
+                f"{i + 1} {KURZNAMEN.get(art, plan['name'])}",
+                lambda a=art: self.waehle(a),
+                gewaehlt=self.auswahl == art,
+                untertitel=preis(plan["kosten"]),
+            )
+        plan = BAUPLAENE[self.auswahl]
+        self.text(940, 230, f"{plan['name']}: {plan['kurz']}", 9, "#abbba6")
+        self.text(940, 252, "RUDERSDORF AUSBAUEN", 10, "#b9c5ad", True)
+        bauphase = s.phase == "bauen"
+        dorfknoepfe = [
+            ("Mauer +5", "20 H  ·  30 S", lambda: s.dorf_aktion("baue_mauer")),
+            ("Reparatur", "10 S", lambda: s.dorf_aktion("repariere_mauer")),
+            ("Haus", "30 G  ·  25 H", lambda: s.dorf_aktion("baue_haus")),
+        ]
+        for art, plan in GEBAEUDE.items():
+            dorfknoepfe.append(
+                (
+                    f"{plan['name']} {self.anzahl_gebaeude(art)}/{MAX_GLEICHE_GEBAEUDE}",
+                    preis(plan["kosten"]),
+                    lambda a=art: s.baue_gebaeude(a),
+                )
+            )
+        for i, (titel, untertitel, aktion) in enumerate(dorfknoepfe):
+            self.knopf(
+                940 + (i % 2) * 113,
+                272 + (i // 2) * 52,
+                107,
+                46,
+                titel,
+                aktion,
+                bauphase,
+                untertitel=untertitel,
+            )
+        turm = s.tuerme.get(self.markiert)
+        titel = (
+            f"Turm ↑  ·  {35 * turm.stufe} G"
+            if turm and turm.stufe < 3
+            else "Für Upgrade Turm wählen"
+        )
+        if turm and turm.stufe >= 3:
+            titel = "Höchste Stufe erreicht"
+        self.knopf(
+            940,
+            430,
+            220,
+            38,
+            titel,
+            lambda: s.verbessere(self.markiert),
+            bauphase and turm is not None and turm.stufe < 3,
+        )
+        self.text(940, 480, "SPÄHER MELDEN", 10, "#b9c5ad", True)
+        self.text(940, 499, self.spaehertext(), 9, "#dcd6b8", width=220)
+        self.text(940, 556, "ZULETZT BESIEGT", 10, "#b9c5ad", True)
+        self.text(940, 575, self.chroniktext(), 9, "#dcd6b8", width=220)
+        self.text(940, 625, f"WELLE {s.welle} / {len(WELLEN)}", 12, GOLD, True)
+        self.text(
+            940,
+            650,
+            f"{len(s.gegner) + len(s.warteschlange)} Gegner übrig  ·  {d.haeuser} Häuser",
+            10,
+        )
+        titel = (
+            "Nächste Welle  [N]"
+            if bauphase
+            else ("Weiter  [Leertaste]" if s.pause else "Pause  [Leertaste]")
+        )
+        if s.phase in ("sieg", "verloren"):
+            titel = "Noch einmal spielen  [R]"
+        self.knopf(940, 689, 220, 46, titel, self.weiter)
+
+    def spaehertext(self):
+        """Zeichnen darf nie abstürzen: Offene Aufgaben erscheinen als Hinweis."""
+        try:
+            bericht = self.spiel.spaeherbericht()
+        except NotImplementedError:
+            return "Die Späher warten auf Aufgabe 10."
+        except Exception as fehler:
+            return f"Späherbericht: {type(fehler).__name__}. Prüfe Aufgabe 10."
+        if bericht is None:
+            return "Die Welle läuft!" if self.spiel.phase == "welle" else "Keine Gegner mehr."
+        teile = [
+            f"{anzahl}× {MONSTER[art]['name'] if art in MONSTER else art}"
+            for art, anzahl in bericht.items()
+        ]
+        return "  ·  ".join(teile) or "Keine Gegner gesichtet."
+
+    def chroniktext(self):
+        chronik = self.spiel.chronik
+        if chronik is None:
+            return "Noch keine Chronik."
+        try:
+            namen = chronik.letzte(4)
+        except NotImplementedError:
+            return "Die Chronik wartet auf Aufgabe 15."
+        except Exception as fehler:
+            return f"Chronik: {type(fehler).__name__}. Prüfe Aufgabe 15."
+        return "  ·  ".join(str(n) for n in namen) or "Noch niemand besiegt."
+
+    def turminfo(self, turm):
+        x, y = turm.x, turm.y
+        links = x + 30 if x < 760 else x - 200
+        self.rechteck(links, y - 44, links + 170, y - 4, fill="#172b28", outline="#536252")
+        self.text(
+            links + 8, y - 40, f"{BAUPLAENE[turm.art]['name']} · Stufe {turm.stufe}", 9, GOLD, True
+        )
+        self.text(
+            links + 8,
+            y - 23,
+            f"{turm.schaden} Schaden · {turm.reichweite} weit · {turm.nachladezeit} s",
+            8,
+        )
+
+    def schalte_tempo(self):
+        self.tempo = 2 if self.tempo == 1 else 1
 
     def waehle(self, art):
         self.auswahl = art
@@ -509,6 +660,7 @@ class Fenster:
         sekunden = min(0.05, jetzt - self.letztes_bild)
         self.letztes_bild = jetzt
         self.zeit += sekunden
-        self.sicher(lambda: self.spiel.schritt(sekunden))
+        for _ in range(self.tempo):
+            self.sicher(lambda: self.spiel.schritt(sekunden))
         self.zeichne()
         self.timer = self.wurzel.after(33, self.tick)

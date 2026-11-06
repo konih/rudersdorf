@@ -368,4 +368,6 @@ Berechne den Preis, bevor du die Stufe erhöhst. Nutze die Dorfkasse zum Bezahle
 Erhöhe erst danach die drei Turmeigenschaften.
 </details>
 
-**Geschafft?** In [KNOBELAUFGABEN.md](KNOBELAUFGABEN.md) wartet dein eigenes Rudersdorf.
+**Geschafft?** Der Orkkönig hat davon gehört … Weiter geht es in
+[AUFGABEN-TEIL2.md](AUFGABEN-TEIL2.md). Freie Ideen ohne Lösung findest du in
+[KNOBELAUFGABEN.md](KNOBELAUFGABEN.md).
